@@ -9,7 +9,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const app = express();
 
 app.use(express.json());
-app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
 
 const PORT = process.env.PORT || 8080;
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
@@ -40,11 +40,11 @@ app.get('/auth/github/callback', async (req, res) => {
 
         const accessToken = response.data.access_token;
 
-        res.redirect(`http://localhost:3000?token=${accessToken}`);
+        res.redirect(`${process.env.CORS_ORIGIN}?token=${accessToken}`);
         
     } catch (error) {
         console.error("Error getting access token", error);
-        res.redirect('http://localhost:3000?error=auth_failed');
+        res.redirect(`${process.env.CORS_ORIGIN}?error=auth_failed`);
     }
 });
 
@@ -243,5 +243,5 @@ app.post('/api/create-pr', async (req, res) => {
 
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server listening on http://localhost:${PORT}`);
+    console.log(`🚀 Server listening on ${process.env.CORS_ORIGIN}${PORT}`);
 });

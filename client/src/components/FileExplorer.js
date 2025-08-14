@@ -13,7 +13,7 @@ const FileExplorer = ({ token, repo, owner, onGenerate }) => {
     useEffect(() => {
         setLoading(true);
         setError(null);
-        axios.get(`http://localhost:8080/api/repo-contents/${owner}/${repo}`, {
+        axios.get(`${process.env.REACT_APP_API_URL}/api/repo-contents/${owner}/${repo}`, {
             headers: { 'Authorization': `Bearer ${token}` },
             params: { path: path }
         }).then(response => {

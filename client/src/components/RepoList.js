@@ -9,7 +9,7 @@ const RepoList = ({ token, onRepoSelect }) => {
     useEffect(() => {
         const fetchRepos = async () => {
             try {
-                const response = await axios.get('http://localhost:8080/api/repos', {
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/repos`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setRepos(response.data);

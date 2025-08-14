@@ -65,7 +65,7 @@ function App() {
         setGeneratedCode('');
         setPrUrl('');
         try {
-            const response = await axios.post('http://localhost:8080/api/generate-summaries', {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/generate-summaries`, {
                 token: accessToken, owner: repoOwner, repo: selectedRepo, files, framework
             });
             const summaryArray = response.data.summaries.split('\n').filter(s => s.trim() !== '');
@@ -83,7 +83,7 @@ function App() {
         setGeneratedCode('');
         setPrUrl('');
         try {
-            const response = await axios.post('http://localhost:8080/api/generate-code', {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/generate-code`, {
                 token: accessToken, owner: repoOwner, repo: selectedRepo, files: filesForContext, summary, framework: frameworkForContext
             });
             setGeneratedCode(response.data.code);
@@ -102,7 +102,7 @@ function App() {
         const testFileName = filesForContext[0]?.path.replace(/(\.[\w\d_-]+)$/i, '.test$1') || 'generated.test.js';
         
         try {
-            const response = await axios.post('http://localhost:8080/api/create-pr', {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/create-pr`, {
                 token: accessToken, owner: repoOwner, repo: selectedRepo, filePath: `tests/${testFileName}`, codeContent: generatedCode,
             });
             setPrUrl(response.data.url);
@@ -118,7 +118,7 @@ function App() {
             <h1 className="text-5xl font-bold mb-2 font-sans text-gray-900">RepoTest.AI</h1>
             <p className="text-lg text-gray-700 mb-8 font-sans">Generate test cases for your code with AI.</p>
             <a 
-                href="http://localhost:8080/auth/github"
+                href={`${process.env.REACT_APP_API_URL}/auth/github`}
                 className="bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300"
             >
                 Login with GitHub
