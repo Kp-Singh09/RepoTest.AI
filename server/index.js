@@ -9,7 +9,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const app = express();
 
 app.use(express.json());
-app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
+app.use(cors({ origin: process.env.CORS_ORIGIN }));
 
 const PORT = process.env.PORT || 8080;
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
