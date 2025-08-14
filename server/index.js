@@ -1,5 +1,3 @@
-// server/index.js
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -11,29 +9,21 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const app = express();
 
 app.use(express.json());
-// Use CORS to allow requests from your React frontend (which runs on port 3000)
 app.use(cors({ origin: 'http://localhost:3000' }));
 
 const PORT = process.env.PORT || 8080;
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 
-// ROUTE 1: The user clicks "Login with GitHub" and is sent here.
-// This route redirects them to GitHub's authorization page.
 app.get('/auth/github', (req, res) => {
-    // Add &scope=repo to the end of the URL
     const url = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo`;
     res.redirect(url);
 });
 
-// ROUTE 2: GitHub redirects the user back to this URL after they log in.
-// We'll grab the temporary 'code' and exchange it for an access token.
 app.get('/auth/github/callback', async (req, res) => {
-    // The code is sent back by GitHub in the query parameters
     const { code } = req.query;
 
     try {
-        // Now we POST this code to GitHub to get the access token
         const response = await axios.post(
             'https://github.com/login/oauth/access_token',
             {
@@ -43,7 +33,6 @@ app.get('/auth/github/callback', async (req, res) => {
             },
             {
                 headers: {
-                    // We ask for the response in JSON format
                     'Accept': 'application/json',
                 },
             }
@@ -51,25 +40,20 @@ app.get('/auth/github/callback', async (req, res) => {
 
         const accessToken = response.data.access_token;
 
-        // IMPORTANT: We redirect the user back to our React app.
-        // We pass the access token as a URL query parameter.
         res.redirect(`http://localhost:3000?token=${accessToken}`);
         
     } catch (error) {
         console.error("Error getting access token", error);
-        // Redirect to frontend with an error message
         res.redirect('http://localhost:3000?error=auth_failed');
     }
 });
 
-// Find and replace your /api/repos route in server/index.js
-app.get('/api/repos', async (req, res) => { // Changed to GET
-    const token = req.headers.authorization?.split(' ')[1]; // Read from header
+app.get('/api/repos', async (req, res) => { 
+    const token = req.headers.authorization?.split(' ')[1]; 
 
     if (!token) {
         return res.status(401).json({ message: 'Unauthorized: Missing access token' });
     }
-    //... keep the rest of the function the same
     try {
         const octokit = new Octokit({ auth: token });
         const { data: repos } = await octokit.repos.listForAuthenticatedUser({
@@ -82,13 +66,11 @@ app.get('/api/repos', async (req, res) => { // Changed to GET
         res.status(500).json({ message: "Failed to fetch repositories" });
     }
 });
-// Add this new route to server/index.js, before app.listen()
 
-// Find and update this route in server/index.js
 app.get('/api/repo-contents/:owner/:repo', async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1]; 
     const { owner, repo } = req.params;
-    const { path } = req.query; // <-- Read path from query parameter
+    const { path } = req.query; 
 
     if (!token) {
         return res.status(401).json({ message: 'Unauthorized: Missing access token' });
@@ -99,7 +81,7 @@ app.get('/api/repo-contents/:owner/:repo', async (req, res) => {
         const { data: contents } = await octokit.repos.getContent({
             owner,
             repo,
-            path: path || '' // Use the provided path, or default to root
+            path: path || '' 
         });
         res.json(contents);
     } catch (error) {
@@ -109,7 +91,6 @@ app.get('/api/repo-contents/:owner/:repo', async (req, res) => {
 });
 
 app.post('/api/generate-summaries', async (req, res) => {
-    // Destructure the new 'framework' field from the request body
     const { token, owner, repo, files, framework } = req.body;
 
     if (!token || !owner || !repo || !files || !framework || files.length === 0) {
@@ -131,7 +112,6 @@ app.post('/api/generate-summaries', async (req, res) => {
         }
 
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-        // The prompt now uses the 'framework' variable
         const prompt = `
             You are an expert Test Case Generator.
             I will provide you with the code from one or more files.
@@ -158,7 +138,6 @@ app.post('/api/generate-summaries', async (req, res) => {
 });
 
 app.post('/api/generate-code', async (req, res) => {
-    // Destructure the new 'framework' field
     const { token, owner, repo, files, summary, framework } = req.body;
 
     if (!token || !owner || !repo || !files || !summary || !framework) {
@@ -180,7 +159,6 @@ app.post('/api/generate-code', async (req, res) => {
         }
 
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-        // The prompt now uses the 'framework' variable
         const prompt = `
             You are a world-class software engineer specializing in testing. Based on the provided code context and the requested test summary, write a complete, production-ready test file.
 
@@ -223,15 +201,13 @@ app.post('/api/create-pr', async (req, res) => {
         const octokit = new Octokit({ auth: token });
         const newBranchName = `test-gen/${Date.now()}`;
         
-        // 1. Get the latest commit SHA of the main branch (assuming 'main')
         const { data: mainBranch } = await octokit.repos.getBranch({
             owner,
             repo,
-            branch: 'main', // Or 'master', you might need to make this dynamic
+            branch: 'main', 
         });
         const latestCommitSha = mainBranch.commit.sha;
 
-        // 2. Create a new branch from the main branch
         await octokit.git.createRef({
             owner,
             repo,
@@ -239,7 +215,6 @@ app.post('/api/create-pr', async (req, res) => {
             sha: latestCommitSha,
         });
 
-        // 3. Create the new file on the new branch
         await octokit.repos.createOrUpdateFileContents({
             owner,
             repo,
@@ -249,13 +224,12 @@ app.post('/api/create-pr', async (req, res) => {
             branch: newBranchName,
         });
         
-        // 4. Create the Pull Request
         const { data: pullRequest } = await octokit.pulls.create({
             owner,
             repo,
             title: prTitle || 'New Test Case from Workik.test',
             head: newBranchName,
-            base: 'main', // Or 'master'
+            base: 'main', 
             body: prBody || 'This PR was automatically generated by Workik.test.',
         });
 
@@ -266,9 +240,6 @@ app.post('/api/create-pr', async (req, res) => {
         res.status(500).json({ message: "Failed to create Pull Request." });
     }
 });
-
-
-
 
 
 app.listen(PORT, () => {

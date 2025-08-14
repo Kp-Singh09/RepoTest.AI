@@ -1,10 +1,7 @@
-// client/src/components/RepoList.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-// Change the function signature to accept onRepoSelect
 const RepoList = ({ token, onRepoSelect }) => { 
-    // These lines were missing. They create the variables.
     const [repos, setRepos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -12,14 +9,12 @@ const RepoList = ({ token, onRepoSelect }) => {
     useEffect(() => {
         const fetchRepos = async () => {
             try {
-                // I'm updating this API call to use headers, which is better practice
                 const response = await axios.get('http://localhost:8080/api/repos', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setRepos(response.data);
             } catch (err) {
                 setError('Failed to load repositories.');
-                console.error(err);
             } finally {
                 setLoading(false);
             }
@@ -28,22 +23,21 @@ const RepoList = ({ token, onRepoSelect }) => {
         fetchRepos();
     }, [token]);
     
-    if (loading) return <p>Loading repositories...</p>;
-    if (error) return <p style={{ color: 'red' }}>{error}</p>;
+    if (loading) return <p className="text-center text-gray-700">Loading repositories...</p>;
+    if (error) return <p className="text-center text-red-500">{error}</p>;
 
     return (
-        <div>
-            <h2>Your Repositories</h2>
-            <ul style={{ listStyle: 'none', padding: 0 }}>
+        <div className="max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">Select a Repository</h2>
+            <ul className="space-y-4">
                 {repos.map(repo => (
-                    // Add the onClick handler to the list item
                     <li 
                         key={repo.id} 
                         onClick={() => onRepoSelect(repo.name, repo.owner.login)}
-                        style={{ border: '1px solid #ccc', padding: '10px', margin: '5px 0', borderRadius: '5px', cursor: 'pointer' }}
+                        className="bg-white/60 backdrop-blur-lg border border-white/30 p-5 rounded-xl shadow-md cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
                     >
-                        <strong>{repo.name}</strong>
-                        <p>{repo.description || 'No description'}</p>
+                        <strong className="text-lg font-semibold text-gray-900">{repo.name}</strong>
+                        <p className="text-sm text-gray-700 mt-1 truncate">{repo.description || 'No description'}</p>
                     </li>
                 ))}
             </ul>
